@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Leadership Toolkit</title>
+    <link rel="stylesheet" href="styles.css?v=12" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="brand" id="navBrand" href="#top">Student Leadership Toolkit</a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="navLinks">
+          Menu
+        </button>
+        <div class="nav-links" id="navLinks">
+          <a href="#overview">Overview</a>
+          <a href="#templates">Templates</a>
+          <a href="#proposal-builder">Proposal</a>
+          <a href="#pitch-builder">Pitch</a>
+          <a href="#reflection-builder">Reflection</a>
+          <a href="#event-checklist">Checklist</a>
+          <a href="#project-dashboard">Projects</a>
+          <a href="#impact-log">Impact</a>
+          <a href="#context">Context</a>
+          <button class="edit-toggle" id="editModeToggle" type="button">Edit Mode</button>
+        </div>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero section">
+        <div class="section-inner hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Interactive student leadership workspace</p>
+            <h1 id="siteTitle">Student Leadership Toolkit</h1>
+            <p class="hero-subtitle" id="siteSubtitle"></p>
+            <p class="hero-description" id="heroDescription"></p>
+            <div class="hero-actions" aria-label="Primary actions">
+              <a class="button primary" href="#proposal-builder">Start a Proposal</a>
+              <a class="button secondary" href="#templates">Browse Templates</a>
+            </div>
+          </div>
+          <div class="hero-panel" aria-label="Toolkit highlights">
+            <div>
+              <span class="metric" id="moduleCount">0</span>
+              <span class="metric-label">Toolkit modules</span>
+            </div>
+            <div>
+              <span class="metric" id="resourceCount">0</span>
+              <span class="metric-label">Editable resources</span>
+            </div>
+            <div>
+              <span class="metric" id="savedStatus">Autosaved</span>
+              <span class="metric-label">Local workspace</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="admin-panel" id="adminPanel" aria-label="Edit mode panel" hidden>
+        <div class="section-inner admin-layout">
+          <div>
+            <h2>Edit Mode</h2>
+            <p>
+              Edit site text, manage resources, import/export JSON, and reset local data. Resource
+              content supports simple markdown-like headings, lists, and dividers.
+            </p>
+          </div>
+
+          <form class="admin-form" id="siteTextForm">
+            <h3>Site Text</h3>
+            <label>
+              Site title
+              <input id="titleInput" type="text" autocomplete="off" />
+            </label>
+            <label>
+              Site subtitle
+              <input id="subtitleInput" type="text" autocomplete="off" />
+            </label>
+            <button class="button primary" type="submit">Update Site Text</button>
+          </form>
+
+          <form class="admin-form resource-form" id="resourceForm">
+            <h3>Resource Editor</h3>
+            <label>
+              Existing resource
+              <select id="resourceSelect"></select>
+            </label>
+            <label>
+              Title
+              <input id="resourceTitle" type="text" required />
+            </label>
+            <label>
+              Resource category
+              <select id="resourceCategory" required></select>
+            </label>
+            <label>
+              Description
+              <textarea id="resourceDescription" rows="3" required></textarea>
+            </label>
+            <label>
+              Recommended use
+              <textarea id="resourceUse" rows="3" required></textarea>
+            </label>
+            <label>
+              Button text
+              <input id="resourceButton" type="text" value="Open Template" required />
+            </label>
+            <label>
+              Full content
+              <textarea id="resourceContent" rows="10" required></textarea>
+            </label>
+            <div class="button-row">
+              <button class="button primary" id="saveResourceChanges" type="button">
+                Save Resource Changes
+              </button>
+              <button class="button secondary" id="addResourceButton" type="button">
+                Add as New Resource
+              </button>
+              <button class="button danger" id="deleteResourceButton" type="button">
+                Delete Selected Resource
+              </button>
+            </div>
+          </form>
+
+          <div class="admin-actions export-center" id="export-center">
+            <h3>Export Center</h3>
+            <button class="button secondary" id="exportJson" type="button">Export All Data as JSON</button>
+            <label class="file-label">
+              Import JSON
+              <input id="importJson" type="file" accept="application/json" />
+            </label>
+            <button class="button secondary" id="exportProposal" type="button">Export Proposal TXT</button>
+            <button class="button secondary" id="exportPitch" type="button">Export Pitch TXT</button>
+            <button class="button secondary" id="exportReflection" type="button">Export Reflection TXT</button>
+            <button class="button secondary" id="exportProjects" type="button">Export Projects TXT</button>
+            <button class="button secondary" id="exportImpact" type="button">Export Impact Log TXT</button>
+            <button class="button secondary" id="exportSelectedResource" type="button">
+              Export Selected Resource TXT
+            </button>
+            <button class="button danger" id="resetToolkit" type="button">Reset to Default Toolkit</button>
+            <p class="small-note">PDF and DOCX export can be connected here later.</p>
+          </div>
+        </div>
+      </aside>
+
+      <section class="section" id="overview">
+        <div class="section-inner split-layout">
+          <div>
+            <p class="eyebrow">Project overview</p>
+            <h2>What This Toolkit Is For</h2>
+            <p id="overviewText"></p>
+            <p class="adapt-note" id="adaptabilityNote"></p>
+          </div>
+          <div class="audience-card">
+            <h3>Especially useful for</h3>
+            <ul class="check-list" id="audienceList"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section context-section" id="context">
+        <div class="section-inner context-grid">
+          <div>
+            <p class="eyebrow">Customize context</p>
+            <h2>Adapt Language to Your School</h2>
+            <p id="contextIntro"></p>
+          </div>
+          <form class="context-form" id="contextForm">
+            <label>
+              School type
+              <select id="schoolType"></select>
+            </label>
+            <label>
+              Leadership context
+              <select id="leadershipContext"></select>
+            </label>
+            <label>
+              Preferred adult support term
+              <select id="preferredAdultTerm"></select>
+            </label>
+            <label>
+              Preferred output purpose
+              <select id="outputPurpose"></select>
+            </label>
+            <label>
+              Preferred terminology for students
+              <select id="studentTerm"></select>
+            </label>
+          </form>
+        </div>
+      </section>
+
+      <section class="section muted" id="framework">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="eyebrow">Leadership framework</p>
+            <h2>Core Leadership Framework</h2>
+            <p>A repeatable way to move from noticing a need to presenting evidence of impact.</p>
+          </div>
+          <div class="card-grid framework-grid" id="frameworkGrid"></div>
+        </div>
+      </section>
+
+      <section class="section" id="modules">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="eyebrow">Practical tools</p>
+            <h2>Toolkit Modules</h2>
+            <p>Use these modules as worksheets, planning tools, or editable workspace sections.</p>
+          </div>
+          <div class="module-list" id="moduleList"></div>
+        </div>
+      </section>
+
+      <section class="section muted" id="templates">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="eyebrow">Resource workspace</p>
+            <h2>Templates and Resources</h2>
+            <p>Search, filter, favorite, open, copy, download, import, and edit template resources.</p>
+          </div>
+          <div class="tool-panel">
+            <label>
+              Search resources
+              <input id="resourceSearch" type="search" placeholder="Search title, category, description, or content" />
+            </label>
+            <label>
+              Category filter
+              <select id="resourceFilter"></select>
+            </label>
+          </div>
+          <div class="recent-panel">
+            <h3>Recently Opened</h3>
+            <div class="chip-list" id="recentlyOpenedList"></div>
+          </div>
+          <p class="empty-state" id="resourceEmpty" hidden>
+            No matching resources found. Try another keyword or category.
+          </p>
+          <div class="card-grid resources-grid" id="resourcesGrid"></div>
+        </div>
+      </section>
+
+      <section class="section" id="proposal-builder">
+        <div class="section-inner builder-grid">
+          <div>
+            <p class="eyebrow">Builder</p>
+            <h2>Proposal Builder</h2>
+            <p>Create a structured student initiative proposal. Drafts autosave locally.</p>
+            <form class="builder-form" id="proposalForm"></form>
+            <div class="button-row">
+              <button class="button primary" id="generateProposal" type="button">Generate Proposal</button>
+              <button class="button secondary" id="copyProposal" type="button">Copy Proposal</button>
+              <button class="button secondary" id="downloadProposal" type="button">Download Proposal as .txt</button>
+              <button class="button secondary" id="saveProposal" type="button">Save Draft</button>
+              <button class="button danger" id="clearProposal" type="button">Clear Form</button>
+            </div>
+          </div>
+          <article class="preview-panel print-area">
+            <h3>Proposal Preview</h3>
+            <pre id="proposalPreview"></pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="section muted" id="pitch-builder">
+        <div class="section-inner builder-grid">
+          <div>
+            <p class="eyebrow">Builder</p>
+            <h2>Pitch Builder</h2>
+            <p>Generate short pitches for students, staff, administrators, partners, or a general audience.</p>
+            <form class="builder-form" id="pitchForm"></form>
+            <label>
+              Audience
+              <select id="pitchAudience"></select>
+            </label>
+            <div class="button-row">
+              <button class="button primary" data-pitch-length="15" type="button">Generate 15-Second Pitch</button>
+              <button class="button primary" data-pitch-length="30" type="button">Generate 30-Second Pitch</button>
+              <button class="button primary" data-pitch-length="60" type="button">Generate 60-Second Pitch</button>
+              <button class="button secondary" id="copyPitch" type="button">Copy Pitch</button>
+              <button class="button secondary" id="downloadPitch" type="button">Download Pitch as .txt</button>
+              <button class="button secondary" id="savePitch" type="button">Save Draft</button>
+            </div>
+          </div>
+          <article class="preview-panel print-area">
+            <h3>Pitch Preview</h3>
+            <pre id="pitchPreview"></pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="reflection-builder">
+        <div class="section-inner builder-grid">
+          <div>
+            <p class="eyebrow">Builder</p>
+            <h2>Reflection Builder</h2>
+            <p>Turn leadership experience into a grounded reflection for portfolios or applications.</p>
+            <form class="builder-form" id="reflectionForm"></form>
+            <div class="button-row">
+              <button class="button primary" data-reflection-type="short" type="button">Generate Short Reflection</button>
+              <button class="button primary" data-reflection-type="detailed" type="button">Generate Detailed Reflection</button>
+              <button class="button secondary" id="copyReflection" type="button">Copy Reflection</button>
+              <button class="button secondary" id="downloadReflection" type="button">Download Reflection as .txt</button>
+              <button class="button secondary" id="saveReflection" type="button">Save Draft</button>
+              <button class="button danger" id="clearReflection" type="button">Clear Form</button>
+            </div>
+          </div>
+          <article class="preview-panel print-area">
+            <h3>Reflection Preview</h3>
+            <pre id="reflectionPreview"></pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="section muted" id="event-checklist">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="eyebrow">Tracker</p>
+            <h2>Event Checklist</h2>
+            <p>Track planning progress for a student event, campaign, meeting, or activity.</p>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-bar"><span id="checklistProgressBar"></span></div>
+            <strong id="checklistProgress">0% complete</strong>
+          </div>
+          <div class="checklist-grid" id="eventChecklistGrid"></div>
+          <form class="inline-form" id="customChecklistForm">
+            <label>
+              Checklist category
+              <input id="customChecklistCategory" type="text" placeholder="Communication" />
+            </label>
+            <label>
+              Custom checklist item
+              <input id="customChecklistItem" type="text" placeholder="Send final reminder" />
+            </label>
+            <button class="button primary" type="submit">Add Item</button>
+            <button class="button danger" id="resetChecklist" type="button">Reset Checklist</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="section" id="project-dashboard">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="eyebrow">Workspace</p>
+            <h2>Project Dashboard</h2>
+            <p>Track multiple leadership projects with deadlines, status, notes, and next actions.</p>
+          </div>
+          <form class="workspace-form" id="projectForm"></form>
+          <div class="tool-panel">
+            <label>
+              Filter by status
+              <select id="projectStatusFilter"></select>
+            </label>
+            <button class="button secondary" id="sortProjects" type="button">Sort by Deadline</button>
+          </div>
+          <div class="card-grid" id="projectGrid"></div>
+        </div>
+      </section>
+
+      <section class="section muted" id="impact-log">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="eyebrow">Evidence</p>
+            <h2>Impact Log</h2>
+            <p>Record evidence from projects, events, campaigns, service activities, or leadership roles.</p>
+          </div>
+          <form class="workspace-form" id="impactForm"></form>
+          <div class="button-row">
+            <button class="button primary" id="generateImpactSummary" type="button">Generate Impact Summary</button>
+            <button class="button secondary" id="exportImpactInline" type="button">Export Impact Log as .txt</button>
+          </div>
+          <article class="preview-panel">
+            <h3>Impact Summary</h3>
+            <pre id="impactSummary"></pre>
+          </article>
+          <div class="card-grid" id="impactGrid"></div>
+        </div>
+      </section>
+
+      <section class="section" id="communication-generator">
+        <div class="section-inner builder-grid">
+          <div>
+            <p class="eyebrow">Generator</p>
+            <h2>Communication Generator</h2>
+            <p>Create clear drafts for announcements, emails, captions, briefings, and posters.</p>
+            <form class="builder-form" id="communicationForm"></form>
+            <div class="button-row">
+              <button class="button primary" id="generateMessage" type="button">Generate Message</button>
+              <button class="button secondary" id="copyMessage" type="button">Copy Message</button>
+              <button class="button secondary" id="downloadMessage" type="button">Download Message</button>
+            </div>
+          </div>
+          <article class="preview-panel">
+            <h3>Message Preview</h3>
+            <pre id="messagePreview"></pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="section muted" id="survey-bank">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="eyebrow">Feedback</p>
+            <h2>Feedback Survey Question Bank</h2>
+            <p>Copy ready-to-use questions for needs assessment, event feedback, and team reflection.</p>
+          </div>
+          <div class="card-grid" id="surveyQuestionGrid"></div>
+        </div>
+      </section>
+
+      <section class="section" id="case-studies">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="eyebrow">Optional scenarios</p>
+            <h2>Case Study Library</h2>
+            <p>Broad examples that can transfer across different school structures and leadership roles.</p>
+          </div>
+          <div class="card-grid case-grid" id="caseStudyGrid"></div>
+        </div>
+      </section>
+
+      <section class="section muted" id="pathway">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="eyebrow">Process map</p>
+            <h2>From Idea to Impact</h2>
+            <p>A universal pathway for developing a leadership idea into a finished initiative.</p>
+          </div>
+          <ol class="timeline" id="actionTimeline"></ol>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal-overlay" id="resourceModal" hidden>
+      <article class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <header class="modal-header">
+          <div>
+            <span class="card-tag" id="modalCategory"></span>
+            <h2 id="modalTitle"></h2>
+            <p id="modalRecommendedUse"></p>
+          </div>
+          <button class="modal-close" id="modalClose" type="button">Close</button>
+        </header>
+        <div class="modal-actions" aria-label="Template actions">
+          <button class="button primary" id="copyTemplate" type="button">Copy Template Text</button>
+          <button class="button secondary" id="downloadTemplate" type="button">Download as .txt</button>
+        </div>
+        <div class="modal-content" id="modalContent"></div>
+      </article>
+    </div>
+
+    <div class="modal-overlay" id="caseModal" hidden>
+      <article class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="caseModalTitle">
+        <header class="modal-header">
+          <div>
+            <span class="card-tag">Case study</span>
+            <h2 id="caseModalTitle"></h2>
+          </div>
+          <button class="modal-close" id="caseModalClose" type="button">Close</button>
+        </header>
+        <div class="modal-content" id="caseModalContent"></div>
+      </article>
+    </div>
+
+    <footer class="footer">
+      <div class="section-inner">
+        <p>Student Leadership Toolkit - Practical tools for school leadership, service, and reflection.</p>
+        <p>Educational use only. Adapt freely for your own school context.</p>
+      </div>
+    </footer>
+
+    <script src="app.js?v=12"></script>
+  </body>
+</html>
