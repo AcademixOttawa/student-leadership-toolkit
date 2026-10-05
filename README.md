@@ -1,115 +1,101 @@
 # Student Leadership Toolkit
 
-An interactive, browser-based workspace for student leadership planning, communication, reflection, project tracking, and impact documentation.
+A browser-based workspace for turning student initiatives into practical plans, coordinating activities, and recording what was learned. Built for student councils, clubs, service teams, peer mentors, and other school communities.
 
-Live site: [https://academixottawa.github.io/student-leadership-toolkit/](https://academixottawa.github.io/student-leadership-toolkit/)
+[Open the toolkit](https://academixottawa.github.io/student-leadership-toolkit/) · [View the repository](https://github.com/AcademixOttawa/student-leadership-toolkit)
 
-Repository: [https://github.com/AcademixOttawa/student-leadership-toolkit](https://github.com/AcademixOttawa/student-leadership-toolkit)
+![Desktop home workspace with project, draft, and checklist summaries](assets/screenshots/home-editorial.png)
 
-## Demonstration
+## A focused workspace
 
-### Home and Toolkit Overview
+The toolkit has **16 views**, with a persistent sidebar on desktop and a collapsible menu on mobile. Each tool has its own section URL, so direct links and browser Back and Forward navigation work. Home brings together actual saved project counts, draft counts, checklist progress, upcoming projects, and featured resources.
 
-![Student Leadership Toolkit home screen](assets/screenshots/home-editorial.png)
+| Area | Views | What you can do |
+| --- | --- | --- |
+| Start | Home | Review ongoing work, resume a draft, or open a resource. |
+| Plan and communicate | Proposal builder, Pitch builder, Communications | Draft a structured proposal, a 15/30/60-second pitch, or an announcement, email, briefing, caption, or poster message. |
+| Organize | Event checklist, My projects | Track preparation tasks, deadlines, project statuses, goals, and next actions. |
+| Reflect and document | Reflection builder, Impact log | Write short or detailed reflections and record quantitative evidence, qualitative observations, and feedback. |
+| Find resources | Template library, Feedback questions, Case studies | Search, filter, favorite, copy, and download templates; explore questions and examples. |
+| Learn the approach | Overview, Leadership framework, Toolkit modules, Action pathway | Explore the toolkit's purpose, planning framework, available tools, and suggested sequence of action. |
+| Adapt | Your school context | Customize terminology for your school, team, adult support, and intended output. |
 
-### Template Search and Full Resource Modal
+**Quick find:** press **⌘ K** on macOS or **Ctrl K** on Windows/Linux to search tools and resources. Use **↑ / ↓** to explore results, **Enter** to open one, and **Escape** to close search. The search button offers the same functionality without a keyboard shortcut.
 
-Users can search templates, open a full resource, read the long-form content, copy the template text, or download it as a `.txt` file.
+## Visual design and interaction
 
-![Resource modal demonstration](assets/screenshots/resource-modal-editorial.png)
+- **Lora** serif headings and **Manrope** interface text are served from local font files.
+- Warm paper colors, fine rules, and generous spacing support an editorial, academic visual style.
+- Sixteen distinct historical botanical specimens sit directly in the page margins. The reflection view uses a *Rosa centifolia* plate.
+- Slow botanical movement, subtle pointer response on the home view, and page transitions add motion. The system's **reduced-motion** preference disables these effects.
+- Labeled controls, visible keyboard focus, modal focus handling, and responsive layouts support keyboard and mobile use. Print styles prioritize generated text.
 
-### Proposal Builder
+### Tools in use
 
-Students can fill a structured form and generate a complete student initiative proposal draft.
+| Proposal builder | Resource modal |
+| --- | --- |
+| ![Proposal form and generated document preview](assets/screenshots/proposal-builder-editorial.png) | ![Full template in a resource modal with copy and download actions](assets/screenshots/resource-modal-editorial.png) |
 
-![Proposal builder demonstration](assets/screenshots/proposal-builder-editorial.png)
+<details>
+<summary>View the mobile workspace</summary>
 
-## Workspace design
+<img src="assets/screenshots/home-mobile-editorial.png" alt="Mobile home workspace with compact navigation and stacked content" width="360" />
 
-The interface uses a persistent sidebar and one focused tool at a time. Home shows actual project, draft, and checklist data, with direct links to continue work. `Cmd/Ctrl+K` opens a keyboard-accessible search across tools and template titles. Existing section URLs still work, including browser Back and Forward.
+</details>
 
-Lora serif headings and Manrope interface text are self-hosted in `assets/fonts/`, together with their SIL Open Font License files. Warm paper colors, fine rules, and different historical botanical specimens in each page's margins form the visual system. Flower details have slow stem-anchored movement; the home detail also responds gently to a fine pointer. System reduced-motion preferences disable these effects. Artwork provenance is recorded in [assets/ARTWORK.md](assets/ARTWORK.md).
+## Run locally
 
-## What This Project Does
+The site uses plain HTML, CSS, and JavaScript. There is **no build step, package installation, or external runtime service**. Fonts and artwork are included in the repository.
 
-The Student Leadership Toolkit helps students:
+From the project directory, start a static server:
 
-- Browse and search leadership templates
-- Open long-form template resources in a modal
-- Copy or download template text
-- Build student initiative proposals
-- Generate short leadership pitches
-- Write structured reflections
-- Track event planning progress
-- Manage leadership projects
-- Record evidence in an impact log
-- Generate communication drafts
-- Customize terminology for different school contexts
-- Save progress locally in the browser
-
-The toolkit is designed to be broadly usable across student councils, clubs, service-learning teams, peer mentors, residential or dormitory leaders, campaign teams, event organizers, and students preparing leadership applications.
-
-## Key Features
-
-- **Templates and Resources**: Search, filter, favorite, open, copy, download, import, and edit resources.
-- **Resource Modal**: Displays full template content with simple markdown-style rendering.
-- **Proposal Builder**: Generates a structured student initiative proposal.
-- **Pitch Builder**: Creates 15-second, 30-second, and 60-second pitches for different audiences.
-- **Reflection Builder**: Produces short or detailed leadership reflections.
-- **Event Checklist**: Tracks event planning tasks with progress percentage.
-- **Project Dashboard**: Stores project status, deadlines, goals, next actions, and notes.
-- **Impact Log**: Records quantitative and qualitative evidence of leadership impact.
-- **Survey Question Bank**: Provides copyable feedback and needs-assessment questions.
-- **Communication Generator**: Drafts announcements, emails, briefings, captions, and poster text.
-- **Edit Mode**: Allows site text and resource content to be edited directly in the browser.
-- **Import/Export**: Supports JSON export/import for toolkit data and `.txt` exports for generated work.
-
-## Local Usage
-
-This project has no build step and no external dependencies.
-
-Open `index.html` directly in a browser:
-
-```text
-index.html
-styles.css
-app.js
-workspace.js
-assets/
+```bash
+python3 -m http.server 8000
 ```
 
-Or serve the folder with any static file server.
+Then open [http://localhost:8000](http://localhost:8000). Any static file server can be used instead. Opening `index.html` directly is also possible, but a local server provides a consistent browser origin for saved work.
 
-## Data Storage
+```text
+index.html                 Page structure, navigation, and tool panels
+styles.css                 Typography, layouts, responsive styles, and motion
+app.js                     Toolkit content, forms, generators, and persistence
+workspace.js               Routing, home summaries, quick find, and interactions
+assets/
+  fonts/                   Self-hosted fonts and their license files
+  botanicals/              Per-view artwork and provenance records
+  botanical-plate.jpg      Home artwork
+  screenshots/             Documentation screenshots
+  ARTWORK.md               Artwork sources, credits, and rights information
+```
 
-The app uses `localStorage` for browser-side persistence. Saved drafts, projects, favorites, impact entries, checklist progress, and context settings remain on the same device and browser.
+## Save, back up, and customize
 
-Data is stored per browser origin: opening the hosted site, a local server, and a file URL creates separate workspaces. Use JSON export/import to move your data between them. If browser storage fails, the app reports that saving is unavailable; keep an exported backup.
+Work is saved in the browser's `localStorage`: drafts, projects, impact entries, favorites, recently opened resources, checklist progress, context settings, and editable toolkit content.
 
-There is currently no cloud database connected. Placeholder functions are included in `app.js` for future integration with Firebase, Supabase, Google Sheets, a CMS, or a custom backend.
+Storage belongs to the **same browser profile and origin**. The hosted site and a local server have separate workspaces; changing the hostname, protocol, or port also changes the origin. Clearing site data removes saved work. There is no account, shared database, or cloud synchronization.
 
-## Editing Content
+Use **Edit & export → Export All Data as JSON** to keep a backup or move work between browsers and origins. Import that JSON in the destination workspace to restore it. A full-workspace import replaces the saved workspace, so export existing work first. Text downloads are available for templates and generated documents, with additional exports for projects and impact entries. If browser storage is unavailable, the interface reports that changes have not been saved.
 
-Most editable content lives in `defaultToolkitData` inside `app.js`, including:
+**Edit & export** also lets you change site text and add, edit, or remove resources. School-specific language is configured in **Your school context**. Developers can edit the default framework, modules, resources, questions, examples, and action pathway in `defaultToolkitData` within `app.js`.
 
-- Site title and subtitle
-- Leadership framework
-- Toolkit modules
-- Template resources
-- Case studies
-- Action pathway
-- Survey question bank
+## How generated text works
 
-Users can also open **Edit Mode** in the website to add, edit, import, export, or reset resource content without rewriting the HTML.
+The proposal, pitch, reflection, communication, and impact-summary features combine built-in templates with the information entered by the user. They do **not** call an external AI service or verify the submitted evidence. Review and adapt generated text before sharing it.
 
-## Deployment
+The current project has no connected backend, collaborative editing, or built-in PDF/DOCX export. Browser printing and plain-text downloads are available; JSON is the workspace backup format.
 
-This site is deployed with GitHub Pages from the `main` branch:
+## Publishing
+
+The project's GitHub Pages configuration uses the **`main` branch, `/` (repository root)**:
 
 [https://academixottawa.github.io/student-leadership-toolkit/](https://academixottawa.github.io/student-leadership-toolkit/)
 
-Because it is a static website, it can also be hosted on Netlify, Vercel, Cloudflare Pages, or any standard static hosting service.
+HTML, CSS, scripts, fonts, and artwork use relative paths so the site works under `/student-leadership-toolkit/`. Publish the site files and their referenced assets together. After pushing a change, check the GitHub Pages deployment result and the hosted site before treating that version as live.
 
-## Accessibility and Compatibility
+The same files can be served by other static hosts without a build process.
 
-The interface uses semantic HTML, clear labels, readable contrast, keyboard-accessible controls, responsive layout, modal focus management, accessible search, reduced-motion support, and print styles. It is written in plain HTML, CSS, and JavaScript so it can be adapted easily for different schools, countries, grade levels, and leadership systems.
+## Artwork and font licenses
+
+Historical botanical artwork sources, individual page assignments, credits, rights statements, and source links are documented in [assets/ARTWORK.md](assets/ARTWORK.md). File checksums and download variants are recorded in [provenance-a.json](assets/botanicals/provenance-a.json) and [provenance-b.json](assets/botanicals/provenance-b.json). CSS applies masking, color treatment, and motion to the displayed images; the local source scans remain intact.
+
+The bundled fonts include their SIL Open Font License files: [Lora](assets/fonts/lora-OFL.txt) and [Manrope](assets/fonts/manrope-OFL.txt).
