@@ -2,7 +2,7 @@
 
 A browser-based workspace for turning student initiatives into practical plans, coordinating activities, and recording what was learned. Built for student councils, clubs, service teams, peer mentors, and other school communities.
 
-[Open the toolkit](https://academixottawa.github.io/student-leadership-toolkit/) · [View the repository](https://github.com/AcademixOttawa/student-leadership-toolkit)
+[Open the toolkit](https://fluffy-paletas-5f1dd0.netlify.app/#home) · [View the repository](https://github.com/AcademixOttawa/student-leadership-toolkit)
 
 ![Desktop home workspace with project, draft, and checklist summaries](assets/screenshots/home-editorial.png)
 
@@ -86,16 +86,24 @@ The current project has no connected backend, collaborative editing, or built-in
 
 ## Publishing
 
-The project's GitHub Pages configuration uses the **`main` branch, `/` (repository root)**:
+The current website is hosted on **Netlify**:
 
-[https://academixottawa.github.io/student-leadership-toolkit/](https://academixottawa.github.io/student-leadership-toolkit/)
+[Open the current toolkit](https://fluffy-paletas-5f1dd0.netlify.app/#home)
 
-HTML, CSS, scripts, fonts, and artwork use relative paths so the site works under `/student-leadership-toolkit/`. Publish the site files and their referenced assets together. After pushing a change, check the GitHub Pages deployment result and the hosted site before treating that version as live.
+For a manual Netlify deployment, upload the ready-to-serve site folder or ZIP with `index.html` at its root, alongside `styles.css`, `app.js`, `workspace.js`, and the runtime assets. No build command or environment variables are required. Fonts, botanical artwork, credits, and licenses should be included together.
 
-The same files can be served by other static hosts without a build process.
+The `main` branch contains the current source. Pushing to GitHub does not update the manually deployed Netlify site; upload a new deployment package when publishing changes. After deploying, check the hosted pages and assets before treating that version as live. Relative asset paths also allow the same files to run on other static hosts.
 
 ## Artwork and font licenses
 
 Historical botanical artwork sources, individual page assignments, credits, rights statements, and source links are documented in [assets/ARTWORK.md](assets/ARTWORK.md). File checksums and download variants are recorded in [provenance-a.json](assets/botanicals/provenance-a.json) and [provenance-b.json](assets/botanicals/provenance-b.json). CSS applies masking, color treatment, and motion to the displayed images; the local source scans remain intact.
 
 The bundled fonts include their SIL Open Font License files: [Lora](assets/fonts/lora-OFL.txt) and [Manrope](assets/fonts/manrope-OFL.txt).
+
+## Legacy website
+
+[Open the legacy toolkit on GitHub Pages](https://academixottawa.github.io/student-leadership-toolkit/)
+
+The original interface, before the editorial and botanical redesign, is preserved as a separate legacy website. GitHub Pages publishes from the [`codex/legacy-site` branch](https://github.com/AcademixOttawa/student-leadership-toolkit/tree/codex/legacy-site), rooted at the original version (`78a4f81`), so updates to `main` do not replace it.
+
+For the current experience, use the Netlify link at the top of this README. Browser-saved work is separate between the two sites; use a JSON backup to transfer it.
