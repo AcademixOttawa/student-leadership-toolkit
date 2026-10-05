@@ -736,6 +736,8 @@ let activeResourceId = null;
 let activeCaseId = null;
 let editingProjectId = null;
 let editingImpactId = null;
+let storageErrorShown = false;
+const modalFocusOrigins = new WeakMap();
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -791,6 +793,7 @@ function initElements() {
     "titleInput",
     "subtitleInput",
     "siteTextForm",
+    "resourceForm",
     "resourceSelect",
     "resourceTitle",
     "resourceCategory",
@@ -827,6 +830,7 @@ function initElements() {
     "resourceFilter",
     "recentlyOpenedList",
     "resourceEmpty",
+    "resourceResults",
     "resourcesGrid",
     "proposalForm",
     "generateProposal",
@@ -917,12 +921,37 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-  if (els.savedStatus) els.savedStatus.textContent = "Saved";
+  let saved = false;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+    saved = true;
+    storageErrorShown = false;
+    if (els.savedStatus) {
+      els.savedStatus.textContent = "Saved locally";
+      els.savedStatus.dataset.state = "saved";
+      els.savedStatus.title = "Your work is saved in this browser.";
+    }
+  } catch (error) {
+    if (els.savedStatus) {
+      els.savedStatus.textContent = "Not saved";
+      els.savedStatus.dataset.state = "error";
+      els.savedStatus.title = "Browser storage is unavailable or full. Export a backup to keep your work.";
+    }
+    if (!storageErrorShown) {
+      showToast("Unable to save in this browser. Export a JSON backup to keep your work.", "error");
+      console.warn("Workspace changes could not be saved.", error);
+      storageErrorShown = true;
+    }
+  }
+  document.dispatchEvent(new CustomEvent("workspace:statechange", { detail: { saved } }));
+  return saved;
 }
 
 function saveStateSoon() {
-  if (els.savedStatus) els.savedStatus.textContent = "Saving";
+  if (els.savedStatus) {
+    els.savedStatus.textContent = "Saving…";
+    els.savedStatus.dataset.state = "saving";
+  }
   window.clearTimeout(saveStateSoon.timer);
   saveStateSoon.timer = window.setTimeout(saveState, 250);
 }
@@ -962,6 +991,7 @@ function renderAll() {
   renderCaseStudies();
   renderActionSteps();
   restoreDrafts();
+  document.dispatchEvent(new CustomEvent("workspace:statechange", { detail: { saved: null } }));
 }
 
 function renderHero() {
@@ -1037,11 +1067,36 @@ function renderResources() {
 
   els.resourcesGrid.innerHTML = "";
   els.resourceEmpty.hidden = filtered.length > 0;
+  if (els.resourceResults) {
+    els.resourceResults.textContent = `${filtered.length} ${filtered.length === 1 ? "resource" : "resources"}${filter !== "All" ? ` · ${filter}` : ""}`;
+  }
+  if (!filtered.length) {
+    els.resourceEmpty.textContent = filter === "Favorites" && !search
+      ? "Your collection starts here. Favorite a resource to keep it close at hand."
+      : "No resources match this search. Try a different keyword or browse the full collection.";
+    if (search || filter !== "All") {
+      const reset = buttonEl("Browse all resources", "button secondary empty-state-action");
+      reset.addEventListener("click", () => {
+        appState.resourceSearch = "";
+        appState.resourceFilter = "All";
+        renderResourceFilters();
+        renderResources();
+        saveStateSoon();
+        els.resourceSearch.focus();
+      });
+      els.resourceEmpty.append(reset);
+    }
+  }
 
   filtered.forEach((resource) => {
     const card = el("article", "card resource-card");
-    const fav = buttonEl(appState.favorites.includes(resource.id) ? "Favorited" : "Favorite", "favorite-btn");
-    fav.classList.toggle("is-favorite", appState.favorites.includes(resource.id));
+    card.dataset.category = resource.category;
+    card.dataset.resourceId = resource.id;
+    const isFavorite = appState.favorites.includes(resource.id);
+    const fav = buttonEl(isFavorite ? "Favorited" : "Favorite", "favorite-btn");
+    fav.classList.toggle("is-favorite", isFavorite);
+    fav.setAttribute("aria-pressed", String(isFavorite));
+    fav.setAttribute("aria-label", `${isFavorite ? "Remove from" : "Add to"} favorites: ${resource.title}`);
     fav.addEventListener("click", () => toggleFavorite(resource.id));
 
     const open = buttonEl(resource.buttonText || "Open Template", "button secondary");
@@ -1068,7 +1123,7 @@ function renderRecentlyOpened() {
     .filter(Boolean);
 
   if (!recentResources.length) {
-    els.recentlyOpenedList.append(textEl("span", "No resources opened yet.", "small-note"));
+    els.recentlyOpenedList.append(textEl("span", "Open a resource and it will appear here for a quick return.", "small-note"));
     return;
   }
 
@@ -1082,28 +1137,29 @@ function renderRecentlyOpened() {
 function openResourceModal(resourceId) {
   const resource = appState.toolkitData.resources.find((item) => item.id === resourceId);
   if (!resource) return;
+  let returnFocus = document.activeElement;
+  const openedFromRecent = els.recentlyOpenedList.contains(returnFocus);
   activeResourceId = resource.id;
   appState.recentlyOpened = [resource.id, ...appState.recentlyOpened.filter((id) => id !== resource.id)].slice(0, 6);
   saveState();
   renderRecentlyOpened();
+  if (openedFromRecent) returnFocus = els.recentlyOpenedList.firstElementChild;
 
   els.modalCategory.textContent = resource.category;
   els.modalTitle.textContent = resource.title;
   els.modalRecommendedUse.textContent = `Recommended use: ${resource.recommendedUse}`;
   els.modalContent.innerHTML = "";
   els.modalContent.append(renderTemplateContent(resource.content));
-  els.resourceModal.hidden = false;
-  document.body.classList.add("modal-open");
-  els.modalClose.focus();
+  showToolkitModal(els.resourceModal, els.modalClose, returnFocus);
 }
 
 function closeResourceModal() {
-  els.resourceModal.hidden = true;
-  document.body.classList.remove("modal-open");
+  hideToolkitModal(els.resourceModal);
   activeResourceId = null;
 }
 
 function toggleFavorite(resourceId) {
+  const restoreFocus = document.activeElement?.classList.contains("favorite-btn");
   if (appState.favorites.includes(resourceId)) {
     appState.favorites = appState.favorites.filter((id) => id !== resourceId);
   } else {
@@ -1111,6 +1167,10 @@ function toggleFavorite(resourceId) {
   }
   saveState();
   renderResources();
+  if (restoreFocus) {
+    const updatedCard = Array.from(els.resourcesGrid.children).find((card) => card.dataset.resourceId === resourceId);
+    (updatedCard?.querySelector(".favorite-btn") || els.resourceFilter).focus();
+  }
 }
 
 function renderTemplateContent(content) {
@@ -1185,10 +1245,10 @@ function renderFieldForm(form, fields, draftKey) {
   fields.forEach(([name, label]) => {
     form.append(labelWrap(label, textareaEl(`${draftKey}-${name}`, 3)));
   });
-  form.addEventListener("input", () => {
+  form.oninput = () => {
     appState.drafts[draftKey] = collectPrefixedFields(draftKey, fields);
     saveStateSoon();
-  });
+  };
 }
 
 function restoreDrafts() {
@@ -1324,6 +1384,7 @@ function renderEventChecklist() {
   const grouped = groupBy(appState.eventChecklist, "category");
   Object.entries(grouped).forEach(([category, items]) => {
     const card = el("article", "checklist-card");
+    card.dataset.category = category;
     card.append(textEl("h3", category));
     items.forEach((item) => {
       const row = el("label", "checkline");
@@ -1400,10 +1461,31 @@ function renderProjectForm() {
 function renderProjects() {
   fillSelect(els.projectStatusFilter, ["All", "Idea", "Planning", "Awaiting Approval", "Active", "Completed", "Reflected"], appState.projectStatusFilter);
   els.projectGrid.innerHTML = "";
-  appState.projects
-    .filter((p) => appState.projectStatusFilter === "All" || p.status === appState.projectStatusFilter)
-    .forEach((project) => {
+  const projects = appState.projects.filter((p) => appState.projectStatusFilter === "All" || p.status === appState.projectStatusFilter);
+  if (!projects.length) {
+    const empty = el("div", "empty-state");
+    empty.append(textEl("h3", appState.projects.length ? "No projects at this stage" : "Make room for your next idea."));
+    empty.append(textEl("p", appState.projects.length
+      ? "Choose another status to see the rest of your projects."
+      : "Add a project with a goal and one next action. You can build the rest as you go."));
+    const action = buttonEl(appState.projects.length ? "Show all projects" : "Add your first project", "button secondary empty-state-action");
+    action.addEventListener("click", () => {
+      if (appState.projects.length) {
+        appState.projectStatusFilter = "All";
+        renderProjects();
+        saveStateSoon();
+        els.projectStatusFilter.focus();
+      } else {
+        document.getElementById("project-title")?.focus();
+      }
+    });
+    empty.append(action);
+    els.projectGrid.append(empty);
+  }
+  projects.forEach((project) => {
       const card = el("article", "card");
+      card.dataset.category = project.category || "Project";
+      card.dataset.status = project.status;
       card.append(textEl("span", project.status, "status-pill"));
       card.append(textEl("h3", project.title || "Untitled project"));
       card.append(textEl("p", `${project.category || "General"} | Deadline: ${project.deadline || "No deadline"}`));
@@ -1481,8 +1563,18 @@ function renderImpactForm() {
 
 function renderImpactLog() {
   els.impactGrid.innerHTML = "";
+  if (!appState.impactLog.length) {
+    const empty = el("div", "empty-state");
+    empty.append(textEl("h3", "Small actions. Meaningful evidence."));
+    empty.append(textEl("p", "Record feedback, participation, or an observation from your work. Your evidence and reflections will appear here."));
+    const action = buttonEl("Record your first entry", "button secondary empty-state-action");
+    action.addEventListener("click", () => document.getElementById("impact-project")?.focus());
+    empty.append(action);
+    els.impactGrid.append(empty);
+  }
   appState.impactLog.forEach((entry) => {
     const card = el("article", "card");
+    card.dataset.category = entry.type;
     card.append(textEl("span", entry.type, "status-pill"));
     card.append(textEl("h3", entry.project || "Untitled entry"));
     card.append(textEl("p", `Date: ${entry.date || "No date"}`));
@@ -1518,6 +1610,7 @@ function renderSurveyQuestionBank() {
   els.surveyQuestionGrid.innerHTML = "";
   appState.toolkitData.surveyQuestionBank.forEach((group) => {
     const card = el("article", "card");
+    card.dataset.category = group.category;
     card.append(textEl("span", "Question bank", "card-tag"));
     card.append(textEl("h3", group.category));
     card.append(listEl(group.questions));
@@ -1532,6 +1625,7 @@ function renderCaseStudies() {
   els.caseStudyGrid.innerHTML = "";
   appState.toolkitData.caseStudies.forEach((caseStudy) => {
     const card = el("article", "card");
+    card.dataset.category = caseStudy.context;
     card.append(textEl("span", caseStudy.context, "card-tag"));
     card.append(textEl("h3", caseStudy.title));
     card.append(textEl("p", caseStudy.problem));
@@ -1561,9 +1655,7 @@ function openCaseModal(caseId) {
     els.caseModalContent.append(textEl("h3", heading));
     els.caseModalContent.append(textEl("p", text));
   });
-  els.caseModal.hidden = false;
-  document.body.classList.add("modal-open");
-  els.caseModalClose.focus();
+  showToolkitModal(els.caseModal, els.caseModalClose);
 }
 
 function renderActionSteps() {
@@ -1614,7 +1706,12 @@ function applyContextSettings() {
 }
 
 function renderAdminResourceSelect() {
-  fillSelect(els.resourceCategory, resourceCategories.filter((c) => !["All", "Favorites"].includes(c)), "Planning");
+  const previousSelection = els.resourceSelect.value;
+  const categories = [...new Set([
+    ...resourceCategories.filter((category) => !["All", "Favorites"].includes(category)),
+    ...appState.toolkitData.resources.map((resource) => resource.category).filter(Boolean)
+  ])];
+  fillSelect(els.resourceCategory, categories, "Planning");
   els.resourceSelect.innerHTML = "";
   appState.toolkitData.resources.forEach((resource) => {
     const option = document.createElement("option");
@@ -1622,9 +1719,10 @@ function renderAdminResourceSelect() {
     option.textContent = resource.title;
     els.resourceSelect.append(option);
   });
-  if (appState.toolkitData.resources.length && !els.resourceTitle.value) {
-    loadResourceEditor(appState.toolkitData.resources[0].id);
-  }
+  const selected = appState.toolkitData.resources.find((resource) => resource.id === previousSelection)
+    || appState.toolkitData.resources[0];
+  if (selected) loadResourceEditor(selected.id);
+  else clearResourceForm();
 }
 
 function loadResourceEditor(resourceId) {
@@ -1641,6 +1739,7 @@ function loadResourceEditor(resourceId) {
 
 function saveResourceChanges() {
   const id = els.resourceSelect.value;
+  if (!id || !els.resourceForm.reportValidity()) return;
   appState.toolkitData.resources = appState.toolkitData.resources.map((resource) =>
     resource.id === id ? readResourceForm(id) : resource
   );
@@ -1649,6 +1748,7 @@ function saveResourceChanges() {
 }
 
 function addResource() {
+  if (!els.resourceForm.reportValidity()) return;
   const resource = readResourceForm(makeId(els.resourceTitle.value || "resource"));
   appState.toolkitData.resources.push(resource);
   saveState();
@@ -1671,26 +1771,84 @@ function exportJson() {
   downloadText("student-leadership-toolkit-data.json", JSON.stringify(appState, null, 2));
 }
 
+function prepareImportedState(imported) {
+  const isRecord = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+  const assertShape = (value, reference) => {
+    if (Array.isArray(reference)) {
+      if (!Array.isArray(value)) throw new Error("Expected a list in toolkit data.");
+      if (reference.length) value.forEach((item) => assertShape(item, reference[0]));
+    } else if (isRecord(reference)) {
+      if (!isRecord(value)) throw new Error("Expected an object in toolkit data.");
+      Object.keys(reference).forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(value, key)) assertShape(value[key], reference[key]);
+      });
+    } else if (typeof value !== typeof reference) {
+      throw new Error("Unsupported value in toolkit data.");
+    }
+  };
+  if (!isRecord(imported)) throw new Error("Expected a toolkit object.");
+  const defaults = createDefaultState();
+  const fullWorkspace = Object.prototype.hasOwnProperty.call(imported, "toolkitData");
+  if (fullWorkspace) assertShape(imported, defaults);
+  else {
+    if (!Object.keys(defaultToolkitData).some((key) => Object.prototype.hasOwnProperty.call(imported, key))) {
+      throw new Error("This JSON does not contain toolkit data.");
+    }
+    assertShape(imported, defaultToolkitData);
+  }
+  const candidate = fullWorkspace ? {
+    ...defaults,
+    ...imported,
+    toolkitData: { ...defaults.toolkitData, ...imported.toolkitData },
+    drafts: { ...defaults.drafts, ...(imported.drafts || {}) },
+    contextSettings: { ...defaults.contextSettings, ...(imported.contextSettings || {}), options: defaultContextSettings.options }
+  } : { ...appState, toolkitData: { ...defaults.toolkitData, ...imported } };
+  const projectShape = Object.fromEntries(["id", "status", ...projectFields.map(([name]) => name)].map((name) => [name, ""]));
+  const impactShape = Object.fromEntries(["id", "type", ...impactFields.map(([name]) => name)].map((name) => [name, ""]));
+  candidate.projects.forEach((project) => assertShape(project, projectShape));
+  candidate.impactLog.forEach((entry) => assertShape(entry, impactShape));
+  ["favorites", "recentlyOpened"].forEach((key) => candidate[key].forEach((id) => {
+    if (typeof id !== "string") throw new Error("Invalid resource reference.");
+  }));
+  ["proposal", "pitch", "reflection", "communication"].forEach((key) => {
+    Object.values(candidate.drafts[key]).forEach((value) => {
+      if (typeof value !== "string") throw new Error("Invalid draft value.");
+    });
+  });
+  candidate.toolkitData.resources.forEach((resource) => {
+    if (typeof resource.title !== "string" || typeof resource.category !== "string") {
+      throw new Error("Resources need a title and category.");
+    }
+  });
+  candidate.toolkitData.resources = ensureResourceIds(candidate.toolkitData.resources);
+  return candidate;
+}
+
 function importJson(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.addEventListener("load", () => {
+    const previousState = appState;
     try {
       const imported = JSON.parse(reader.result);
-      if (imported.toolkitData) {
-        appState = { ...createDefaultState(), ...imported };
-      } else {
-        appState.toolkitData = { ...deepClone(defaultToolkitData), ...imported };
-      }
-      appState.toolkitData.resources = ensureResourceIds(appState.toolkitData.resources || []);
-      saveState();
+      const candidate = prepareImportedState(imported);
+      appState = candidate;
+      editingProjectId = null;
+      editingImpactId = null;
       renderStaticForms();
       renderAll();
+      if (saveState()) showToast("Toolkit imported and saved in this browser.");
     } catch (error) {
-      alert("Import failed. Please choose a valid JSON file.");
+      if (appState !== previousState) {
+        appState = previousState;
+        renderStaticForms();
+        renderAll();
+      }
+      showToast("Import failed. Please choose a valid toolkit JSON file.", "error");
     }
   });
+  reader.addEventListener("error", () => showToast("The selected file could not be read. Please try again.", "error"));
   reader.readAsText(file);
   event.target.value = "";
 }
@@ -1698,9 +1856,36 @@ function importJson(event) {
 function resetToolkit() {
   if (!confirm("Reset to the default toolkit? This will clear saved local work.")) return;
   appState = createDefaultState();
+  editingProjectId = null;
+  editingImpactId = null;
   saveState();
   renderStaticForms();
   renderAll();
+}
+
+function setEditMode(opening, { focus = true } = {}) {
+  els.adminPanel.hidden = !opening;
+  els.editModeToggle.classList.toggle("is-active", opening);
+  els.editModeToggle.setAttribute("aria-expanded", String(opening));
+  let label = els.editModeToggle.querySelector(".edit-toggle-label");
+  if (!label) {
+    Array.from(els.editModeToggle.childNodes).filter((node) => node.nodeType === Node.TEXT_NODE).forEach((node) => node.remove());
+    label = el("span", "edit-toggle-label");
+    els.editModeToggle.append(label);
+  }
+  label.textContent = opening ? "Close editor" : "Edit & export";
+  els.navLinks.classList.remove("is-open");
+  els.navToggle.setAttribute("aria-expanded", "false");
+  if (opening && focus) {
+    const heading = els.adminPanel.querySelector("h2");
+    heading?.setAttribute("tabindex", "-1");
+    heading?.focus({ preventScroll: true });
+    els.adminPanel.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
+  }
+}
+
+function closeEditMode() {
+  setEditMode(false, { focus: false });
 }
 
 function bindEvents() {
@@ -1709,13 +1894,19 @@ function bindEvents() {
     els.navToggle.setAttribute("aria-expanded", String(open));
   });
   els.navLinks.addEventListener("click", (event) => {
-    if (event.target.tagName === "A") els.navLinks.classList.remove("is-open");
+    if (event.target.closest("a")) {
+      els.navLinks.classList.remove("is-open");
+      els.navToggle.setAttribute("aria-expanded", "false");
+    }
   });
   els.editModeToggle.addEventListener("click", () => {
-    const opening = els.adminPanel.hidden;
-    els.adminPanel.hidden = !opening;
-    els.editModeToggle.classList.toggle("is-active", opening);
-    els.editModeToggle.textContent = opening ? "Close Edit Mode" : "Edit Mode";
+    setEditMode(els.adminPanel.hidden);
+  });
+  els.editModeToggle.setAttribute("aria-controls", "adminPanel");
+  els.editModeToggle.setAttribute("aria-expanded", String(!els.adminPanel.hidden));
+  els.resourceForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveResourceChanges();
   });
   els.siteTextForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -1824,17 +2015,61 @@ function bindEvents() {
   els.caseModal.addEventListener("click", (event) => {
     if (event.target === els.caseModal) closeCaseModal();
   });
-  document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape") return;
-    if (!els.resourceModal.hidden) closeResourceModal();
-    if (!els.caseModal.hidden) closeCaseModal();
-  });
+  bindToolkitModalKeyboard(els.resourceModal, closeResourceModal);
+  bindToolkitModalKeyboard(els.caseModal, closeCaseModal);
 }
 
 function closeCaseModal() {
-  els.caseModal.hidden = true;
-  document.body.classList.remove("modal-open");
+  hideToolkitModal(els.caseModal);
   activeCaseId = null;
+}
+
+function showToolkitModal(modal, initialFocus, returnFocus = document.activeElement) {
+  modalFocusOrigins.set(modal, returnFocus);
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+  initialFocus.focus({ preventScroll: true });
+}
+
+function hideToolkitModal(modal) {
+  if (modal.hidden) return;
+  modal.hidden = true;
+  if (!document.querySelector(".modal-overlay:not([hidden]), dialog[open]")) {
+    document.body.classList.remove("modal-open");
+  }
+  const origin = modalFocusOrigins.get(modal);
+  modalFocusOrigins.delete(modal);
+  if (origin instanceof HTMLElement && origin.isConnected && !origin.closest("[hidden]")) {
+    origin.focus({ preventScroll: true });
+  }
+}
+
+function bindToolkitModalKeyboard(modal, close) {
+  modal.addEventListener("keydown", (event) => {
+    if (modal.hidden || document.querySelector("dialog[open]")) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      close();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const focusable = Array.from(modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+      .filter((element) => element.getClientRects().length && !element.closest("[hidden]"));
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!first) {
+      event.preventDefault();
+      return;
+    }
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
 }
 
 function generateImpactSummary() {
@@ -1899,21 +2134,59 @@ function clearDraft(key, fields, preview, outputKey) {
   saveState();
 }
 
-function copyText(text) {
-  if (!text) return;
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text);
-    return;
+function showToast(message, tone = "success") {
+  let toast = document.getElementById("workspaceToast");
+  if (!toast) {
+    toast = el("div", "workspace-toast");
+    toast.id = "workspaceToast";
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    toast.setAttribute("aria-atomic", "true");
+    document.body.append(toast);
   }
+  window.clearTimeout(showToast.timer);
+  toast.textContent = message;
+  toast.dataset.tone = tone;
+  toast.classList.add("is-visible");
+  showToast.timer = window.setTimeout(() => toast.classList.remove("is-visible"), tone === "error" ? 7000 : 3500);
+}
+
+async function copyText(text) {
+  if (!text || !String(text).trim()) {
+    showToast("Create a draft first, then copy it here.", "info");
+    return false;
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast("Copied to clipboard.");
+      return true;
+    } catch (error) {
+      // Older browsers and restricted contexts may still support the local fallback.
+    }
+  }
+  const previousFocus = document.activeElement;
   const temp = document.createElement("textarea");
   temp.value = text;
   temp.setAttribute("readonly", "");
+  temp.setAttribute("aria-label", "Copy content");
   temp.style.position = "fixed";
   temp.style.opacity = "0";
-  document.body.append(temp);
-  temp.select();
-  document.execCommand("copy");
-  temp.remove();
+  (document.querySelector(".modal-overlay:not([hidden]) .modal-panel") || document.body).append(temp);
+  let copied = false;
+  try {
+    temp.select();
+    copied = document.execCommand("copy");
+  } catch (error) {
+    copied = false;
+  } finally {
+    temp.remove();
+    if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
+      previousFocus.focus({ preventScroll: true });
+    }
+  }
+  showToast(copied ? "Copied to clipboard." : "Copy was unavailable. Download the text or select it to copy manually.", copied ? "success" : "error");
+  return copied;
 }
 
 function downloadText(filename, text) {

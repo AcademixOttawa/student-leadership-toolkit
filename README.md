@@ -10,19 +10,25 @@ Repository: [https://github.com/AcademixOttawa/student-leadership-toolkit](https
 
 ### Home and Toolkit Overview
 
-![Student Leadership Toolkit home screen](assets/screenshots/home.jpg)
+![Student Leadership Toolkit home screen](assets/screenshots/home-editorial.png)
 
 ### Template Search and Full Resource Modal
 
 Users can search templates, open a full resource, read the long-form content, copy the template text, or download it as a `.txt` file.
 
-![Resource modal demonstration](assets/screenshots/resource-modal.jpg)
+![Resource modal demonstration](assets/screenshots/resource-modal-editorial.png)
 
 ### Proposal Builder
 
 Students can fill a structured form and generate a complete student initiative proposal draft.
 
-![Proposal builder demonstration](assets/screenshots/proposal-builder.jpg)
+![Proposal builder demonstration](assets/screenshots/proposal-builder-editorial.png)
+
+## Workspace design
+
+The interface uses a persistent sidebar and one focused tool at a time. Home shows actual project, draft, and checklist data, with direct links to continue work. `Cmd/Ctrl+K` opens a keyboard-accessible search across tools and template titles. Existing section URLs still work, including browser Back and Forward.
+
+Lora serif headings and Manrope interface text are self-hosted in `assets/fonts/`, together with their SIL Open Font License files. Warm paper colors, fine rules, and different historical botanical specimens in each page's margins form the visual system. Flower details have slow stem-anchored movement; the home detail also responds gently to a fine pointer. System reduced-motion preferences disable these effects. Artwork provenance is recorded in [assets/ARTWORK.md](assets/ARTWORK.md).
 
 ## What This Project Does
 
@@ -68,6 +74,8 @@ Open `index.html` directly in a browser:
 index.html
 styles.css
 app.js
+workspace.js
+assets/
 ```
 
 Or serve the folder with any static file server.
@@ -75,6 +83,8 @@ Or serve the folder with any static file server.
 ## Data Storage
 
 The app uses `localStorage` for browser-side persistence. Saved drafts, projects, favorites, impact entries, checklist progress, and context settings remain on the same device and browser.
+
+Data is stored per browser origin: opening the hosted site, a local server, and a file URL creates separate workspaces. Use JSON export/import to move your data between them. If browser storage fails, the app reports that saving is unavailable; keep an exported backup.
 
 There is currently no cloud database connected. Placeholder functions are included in `app.js` for future integration with Firebase, Supabase, Google Sheets, a CMS, or a custom backend.
 
@@ -102,4 +112,4 @@ Because it is a static website, it can also be hosted on Netlify, Vercel, Cloudf
 
 ## Accessibility and Compatibility
 
-The interface uses semantic HTML, clear labels, readable contrast, keyboard-accessible controls, responsive layout, modal close behavior, and print styles. It is written in plain HTML, CSS, and JavaScript so it can be adapted easily for different schools, countries, grade levels, and leadership systems.
+The interface uses semantic HTML, clear labels, readable contrast, keyboard-accessible controls, responsive layout, modal focus management, accessible search, reduced-motion support, and print styles. It is written in plain HTML, CSS, and JavaScript so it can be adapted easily for different schools, countries, grade levels, and leadership systems.
